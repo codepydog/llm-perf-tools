@@ -3,8 +3,7 @@ import time
 
 from openai import AsyncOpenAI
 
-from llm_perf_tools.models import RequestMetrics
-from llm_perf_tools.metrics import calculate_stats
+from llm_perf_tools import RequestMetrics, calculate_stats
 
 
 # Prerequisites: Launch Ollama server with: ollama run gpt-oss:20b
@@ -49,7 +48,7 @@ async def main():
 
     stats = calculate_stats(metrics)
 
-    print(f"\nInference Metrics:")
+    print("\nInference Metrics:")
     print(
         f"  Time to First Token (TTFT): {stats.ttft:.3f}s"
         if stats.ttft
@@ -72,7 +71,7 @@ async def main():
         tps = metrics.output_tokens / generation_time if generation_time > 0 else 0
         print(f"  Tokens Per Second (TPS): {tps:.2f}")
     else:
-        print(f"  Tokens Per Second (TPS): N/A")
+        print("  Tokens Per Second (TPS): N/A")
 
 
 if __name__ == "__main__":

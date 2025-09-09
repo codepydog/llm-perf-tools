@@ -3,7 +3,7 @@ import time
 
 from openai import AsyncOpenAI
 
-from llm_perf_tools.models import RequestMetrics, BatchInferenceStats
+from llm_perf_tools import RequestMetrics, BatchInferenceStats
 
 
 async def make_request(
@@ -62,7 +62,9 @@ def calculate_percentile(values: list[float], percentile: float) -> float:
     return sorted_values[index]
 
 
-def calculate_batch_stats(metrics_list: list[RequestMetrics], batch_duration: float) -> BatchInferenceStats:
+def calculate_batch_stats(
+    metrics_list: list[RequestMetrics], batch_duration: float
+) -> BatchInferenceStats:
     if not metrics_list:
         return BatchInferenceStats()
 
@@ -163,7 +165,7 @@ async def main():
 
     stats = calculate_batch_stats(metrics_list, batch_duration)
 
-    print(f"\nBatch Inference Metrics:")
+    print("\nBatch Inference Metrics:")
     print(f"  Total Requests: {stats.total_requests}")
     print(f"  Successful Requests: {stats.successful_requests}")
     print(
@@ -172,7 +174,7 @@ async def main():
     print(f"  Requests Per Second (RPS): {stats.rps:.2f}")
 
     if stats.avg_ttft:
-        print(f"\n  Time to First Token (TTFT):")
+        print("\n  Time to First Token (TTFT):")
         print(f"    Average: {stats.avg_ttft:.3f}s")
         print(f"    P50: {stats.p50_ttft:.3f}s")
         print(f"    P95: {stats.p95_ttft:.3f}s")
@@ -181,7 +183,7 @@ async def main():
         print(f"    Max: {stats.max_ttft:.3f}s")
 
     if stats.avg_e2e_latency:
-        print(f"\n  End-to-End Latency:")
+        print("\n  End-to-End Latency:")
         print(f"    Average: {stats.avg_e2e_latency:.3f}s")
         print(f"    P50: {stats.p50_e2e_latency:.3f}s")
         print(f"    P95: {stats.p95_e2e_latency:.3f}s")
@@ -190,7 +192,7 @@ async def main():
         print(f"    Max: {stats.max_e2e_latency:.3f}s")
 
     if stats.avg_itl:
-        print(f"\n  Inter-token Latency (ITL):")
+        print("\n  Inter-token Latency (ITL):")
         print(f"    Average: {stats.avg_itl:.3f}s")
         print(f"    P50: {stats.p50_itl:.3f}s")
         print(f"    P95: {stats.p95_itl:.3f}s")
@@ -199,7 +201,7 @@ async def main():
         print(f"    Max: {stats.max_itl:.3f}s")
 
     if stats.avg_tps:
-        print(f"\n  Tokens Per Second (TPS):")
+        print("\n  Tokens Per Second (TPS):")
         print(f"    Average: {stats.avg_tps:.2f}")
         print(f"    P50: {stats.p50_tps:.2f}")
         print(f"    P5: {stats.p5_tps:.2f}")

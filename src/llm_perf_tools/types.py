@@ -24,7 +24,7 @@ class BatchInferenceStats(BaseModel):
     p99_ttft: float | None = None
     min_ttft: float | None = None
     max_ttft: float | None = None
-    
+
     # End-to-End Latency
     avg_e2e_latency: float | None = None
     p50_e2e_latency: float | None = None
@@ -32,7 +32,7 @@ class BatchInferenceStats(BaseModel):
     p99_e2e_latency: float | None = None
     min_e2e_latency: float | None = None
     max_e2e_latency: float | None = None
-    
+
     # Inter-token Latency
     avg_itl: float | None = None
     p50_itl: float | None = None
@@ -40,7 +40,7 @@ class BatchInferenceStats(BaseModel):
     p99_itl: float | None = None
     min_itl: float | None = None
     max_itl: float | None = None
-    
+
     # Tokens Per Second
     avg_tps: float | None = None
     p50_tps: float | None = None
@@ -48,9 +48,9 @@ class BatchInferenceStats(BaseModel):
     p1_tps: float | None = None
     min_tps: float | None = None
     max_tps: float | None = None
-    
+
     # Requests Per Second
     rps: float | None = None
-    
+
     total_requests: int = 0
     successful_requests: int = 0
