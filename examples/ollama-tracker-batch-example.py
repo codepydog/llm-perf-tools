@@ -2,7 +2,7 @@ import asyncio
 
 from openai import AsyncOpenAI
 
-from llm_perf_tools import InferenceTracker
+from llm_perf_tools import InferenceTracker, save_metrics_to_json
 
 
 async def main():
@@ -40,7 +40,7 @@ async def main():
 
     print("=" * 80)
 
-    stats = tracker.get_batch_stats()
+    stats = tracker.compute_metrics()
 
     print("\nBatch Inference Metrics:")
     print(f"  Total Requests: {stats.total_requests}")
@@ -85,6 +85,9 @@ async def main():
         print(f"    P1: {stats.p1_tps:.2f}")
         print(f"    Min: {stats.min_tps:.2f}")
         print(f"    Max: {stats.max_tps:.2f}")
+
+    saved_file = save_metrics_to_json(tracker, "ollama_batch_example_complete.json")
+    print(f"\nComplete metrics saved to: {saved_file}")
 
 
 if __name__ == "__main__":

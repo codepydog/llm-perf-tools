@@ -1,29 +1,31 @@
 from .types import RequestMetrics, InferenceStats, BatchInferenceStats
 from .inference import (
     InferenceTracker,
-    calculate_ttft,
-    calculate_e2e_latency,
-    calculate_itl,
-    calculate_tps,
-    calculate_rps,
+    time_to_first_token,
+    end_to_end_latency,
+    inter_token_latency,
+    tokens_per_second,
+    requests_per_second,
     calculate_stats,
-    calculate_percentile,
-    calculate_batch_stats,
+    percentile,
+    compute_batch_metrics,
 )
+from .utils import save_metrics_to_json
 
 __all__ = [
     "RequestMetrics",
     "InferenceStats",
     "BatchInferenceStats",
     "InferenceTracker",
-    "calculate_ttft",
-    "calculate_e2e_latency",
-    "calculate_itl",
-    "calculate_tps",
-    "calculate_rps",
+    "time_to_first_token",
+    "end_to_end_latency",
+    "inter_token_latency",
+    "tokens_per_second",
+    "requests_per_second",
     "calculate_stats",
-    "calculate_percentile",
-    "calculate_batch_stats",
+    "percentile",
+    "compute_batch_metrics",
+    "save_metrics_to_json",
 ]
 
 __version__ = "0.1.0"

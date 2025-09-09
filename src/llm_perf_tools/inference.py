@@ -4,19 +4,19 @@ from typing import Any
 from .types import RequestMetrics, InferenceStats, BatchInferenceStats
 
 
-def calculate_ttft(metrics: RequestMetrics) -> float | None:
+def time_to_first_token(metrics: RequestMetrics) -> float | None:
     if metrics.first_token_time is None:
         return None
     return metrics.first_token_time - metrics.request_start
 
 
-def calculate_e2e_latency(metrics: RequestMetrics) -> float | None:
+def end_to_end_latency(metrics: RequestMetrics) -> float | None:
     if metrics.request_end is None:
         return None
     return metrics.request_end - metrics.request_start
 
 
-def calculate_itl(metrics: RequestMetrics) -> float | None:
+def inter_token_latency(metrics: RequestMetrics) -> float | None:
     if metrics.first_token_time is None or metrics.request_end is None:
         return None
     if metrics.output_tokens <= 1:
@@ -25,7 +25,7 @@ def calculate_itl(metrics: RequestMetrics) -> float | None:
     return generation_time / (metrics.output_tokens - 1)
 
 
-def calculate_tps(metrics: list[RequestMetrics]) -> float | None:
+def tokens_per_second(metrics: list[RequestMetrics]) -> float | None:
     if not metrics:
         return None
 
@@ -43,33 +43,29 @@ def calculate_tps(metrics: list[RequestMetrics]) -> float | None:
     return total_tokens / duration if duration > 0 else None
 
 
-def calculate_rps(metrics: list[RequestMetrics], duration: float) -> float | None:
+def requests_per_second(metrics: list[RequestMetrics], duration: float) -> float | None:
     if duration <= 0:
         return None
     completed_requests = len([m for m in metrics if m.request_end is not None])
     return completed_requests / duration
 
 
-def calculate_stats(
-    metrics: RequestMetrics | list[RequestMetrics], duration: float | None = None
-) -> InferenceStats:
+def calculate_stats(metrics: RequestMetrics | list[RequestMetrics]) -> InferenceStats:
     if isinstance(metrics, RequestMetrics):
         return InferenceStats(
-            ttft=calculate_ttft(metrics),
-            e2e_latency=calculate_e2e_latency(metrics),
-            itl=calculate_itl(metrics),
+            ttft=time_to_first_token(metrics),
+            e2e_latency=end_to_end_latency(metrics),
+            itl=inter_token_latency(metrics),
         )
 
     stats = InferenceStats()
     if metrics:
-        stats.tps = calculate_tps(metrics)
-        if duration is not None:
-            stats.rps = calculate_rps(metrics, duration)
+        stats.tps = tokens_per_second(metrics)
 
     return stats
 
 
-def calculate_percentile(values: list[float], percentile: float) -> float:
+def percentile(values: list[float], percentile: float) -> float:
     if not values:
         return 0.0
     sorted_values = sorted(values)
@@ -77,7 +73,7 @@ def calculate_percentile(values: list[float], percentile: float) -> float:
     return sorted_values[index]
 
 
-def calculate_batch_stats(
+def compute_batch_metrics(
     metrics_list: list[RequestMetrics], batch_duration: float
 ) -> BatchInferenceStats:
     if not metrics_list:
@@ -114,27 +110,27 @@ def calculate_batch_stats(
 
     return BatchInferenceStats(
         avg_ttft=sum(ttft_values) / len(ttft_values) if ttft_values else None,
-        p50_ttft=calculate_percentile(ttft_values, 50) if ttft_values else None,
-        p95_ttft=calculate_percentile(ttft_values, 95) if ttft_values else None,
-        p99_ttft=calculate_percentile(ttft_values, 99) if ttft_values else None,
+        p50_ttft=percentile(ttft_values, 50) if ttft_values else None,
+        p95_ttft=percentile(ttft_values, 95) if ttft_values else None,
+        p99_ttft=percentile(ttft_values, 99) if ttft_values else None,
         min_ttft=min(ttft_values) if ttft_values else None,
         max_ttft=max(ttft_values) if ttft_values else None,
         avg_e2e_latency=sum(e2e_values) / len(e2e_values) if e2e_values else None,
-        p50_e2e_latency=calculate_percentile(e2e_values, 50) if e2e_values else None,
-        p95_e2e_latency=calculate_percentile(e2e_values, 95) if e2e_values else None,
-        p99_e2e_latency=calculate_percentile(e2e_values, 99) if e2e_values else None,
+        p50_e2e_latency=percentile(e2e_values, 50) if e2e_values else None,
+        p95_e2e_latency=percentile(e2e_values, 95) if e2e_values else None,
+        p99_e2e_latency=percentile(e2e_values, 99) if e2e_values else None,
         min_e2e_latency=min(e2e_values) if e2e_values else None,
         max_e2e_latency=max(e2e_values) if e2e_values else None,
         avg_itl=sum(itl_values) / len(itl_values) if itl_values else None,
-        p50_itl=calculate_percentile(itl_values, 50) if itl_values else None,
-        p95_itl=calculate_percentile(itl_values, 95) if itl_values else None,
-        p99_itl=calculate_percentile(itl_values, 99) if itl_values else None,
+        p50_itl=percentile(itl_values, 50) if itl_values else None,
+        p95_itl=percentile(itl_values, 95) if itl_values else None,
+        p99_itl=percentile(itl_values, 99) if itl_values else None,
         min_itl=min(itl_values) if itl_values else None,
         max_itl=max(itl_values) if itl_values else None,
         avg_tps=sum(tps_values) / len(tps_values) if tps_values else None,
-        p50_tps=calculate_percentile(tps_values, 50) if tps_values else None,
-        p5_tps=calculate_percentile(tps_values, 5) if tps_values else None,
-        p1_tps=calculate_percentile(tps_values, 1) if tps_values else None,
+        p50_tps=percentile(tps_values, 50) if tps_values else None,
+        p5_tps=percentile(tps_values, 5) if tps_values else None,
+        p1_tps=percentile(tps_values, 1) if tps_values else None,
         min_tps=min(tps_values) if tps_values else None,
         max_tps=max(tps_values) if tps_values else None,
         rps=rps,
@@ -245,14 +241,14 @@ class InferenceTracker:
             self.metrics.append(failed_metrics)
             raise e
 
-    def get_batch_stats(self) -> BatchInferenceStats:
+    def compute_metrics(self) -> BatchInferenceStats:
         if not self.metrics or self._start_time is None:
             return BatchInferenceStats()
 
         current_time = time.time()
         batch_duration = current_time - self._start_time
-        return calculate_batch_stats(self.metrics, batch_duration)
+        return compute_batch_metrics(self.metrics, batch_duration)
 
-    def reset_metrics(self):
+    def reset(self):
         self.metrics.clear()
         self._start_time = None
