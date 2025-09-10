@@ -5,18 +5,52 @@ from .types import RequestMetrics, InferenceStats, BatchInferenceStats
 
 
 def time_to_first_token(metrics: RequestMetrics) -> float | None:
+    """Calculate time from request start to first token received.
+
+    Measures the latency between sending a request and receiving
+    the first token of the response. Lower values indicate better
+    responsiveness.
+
+    Args:
+        metrics: RequestMetrics containing timing information
+
+    Returns:
+        Time in seconds, or None if first token time not recorded
+    """
     if metrics.first_token_time is None:
         return None
     return metrics.first_token_time - metrics.request_start
 
 
 def end_to_end_latency(metrics: RequestMetrics) -> float | None:
+    """Calculate total request processing time.
+
+    Measures complete request duration from start to finish.
+    Includes both time to first token and generation time.
+
+    Args:
+        metrics: RequestMetrics containing timing information
+
+    Returns:
+        Total time in seconds, or None if request not completed
+    """
     if metrics.request_end is None:
         return None
     return metrics.request_end - metrics.request_start
 
 
 def inter_token_latency(metrics: RequestMetrics) -> float | None:
+    """Calculate average time between consecutive tokens.
+
+    Measures token generation consistency by computing the average
+    interval between tokens during the generation phase.
+
+    Args:
+        metrics: RequestMetrics with timing and token count data
+
+    Returns:
+        Average seconds per token, or None if insufficient data
+    """
     if metrics.first_token_time is None or metrics.request_end is None:
         return None
     if metrics.output_tokens <= 1:
@@ -26,6 +60,17 @@ def inter_token_latency(metrics: RequestMetrics) -> float | None:
 
 
 def tokens_per_second(metrics: list[RequestMetrics]) -> float | None:
+    """Calculate overall token generation throughput.
+
+    Measures tokens generated per second across multiple requests,
+    accounting for parallel processing and overlapping requests.
+
+    Args:
+        metrics: List of RequestMetrics from multiple requests
+
+    Returns:
+        Tokens per second throughput, or None if no completed requests
+    """
     if not metrics:
         return None
 
@@ -44,6 +89,18 @@ def tokens_per_second(metrics: list[RequestMetrics]) -> float | None:
 
 
 def requests_per_second(metrics: list[RequestMetrics], duration: float) -> float | None:
+    """Calculate request processing rate.
+
+    Measures how many requests are completed per second
+    during a given time period.
+
+    Args:
+        metrics: List of RequestMetrics to analyze
+        duration: Time period in seconds
+
+    Returns:
+        Completed requests per second, or None if invalid duration
+    """
     if duration <= 0:
         return None
     completed_requests = len([m for m in metrics if m.request_end is not None])
@@ -51,18 +108,28 @@ def requests_per_second(metrics: list[RequestMetrics], duration: float) -> float
 
 
 def compute_stats(metrics: RequestMetrics | list[RequestMetrics]) -> InferenceStats:
-    """Compute inference statistics for a single request or a batch.
+    """Compute inference statistics for single request or batch.
 
-    Parameters
-    ----------
-    metrics:
-        Either a single :class:`RequestMetrics` instance or a list of them.
+    Calculates key performance metrics including time to first token,
+    end-to-end latency, and tokens per second.
 
-    Returns
-    -------
-    InferenceStats
-        Aggregated statistics such as time to first token and tokens per
-        second.
+    Args:
+        metrics: Single RequestMetrics instance or list of RequestMetrics
+
+    Returns:
+        InferenceStats containing computed performance metrics
+
+    Example:
+        >>> from llm_perf_tools.types import RequestMetrics
+        >>> request_metrics = RequestMetrics(
+        ...     request_start=1000.0,
+        ...     first_token_time=1001.5,
+        ...     request_end=1003.0,
+        ...     output_tokens=20
+        ... )
+        >>> stats = compute_stats(request_metrics)
+        >>> stats.ttft > 0
+        True
     """
 
     if isinstance(metrics, RequestMetrics):
@@ -91,6 +158,18 @@ def compute_stats(metrics: RequestMetrics | list[RequestMetrics]) -> InferenceSt
 
 
 def percentile(values: list[float], percentile: float) -> float:
+    """Calculate percentile value from a list of numbers.
+
+    Computes the specified percentile using linear interpolation
+    method for statistical analysis of performance metrics.
+
+    Args:
+        values: List of numeric values to analyze
+        percentile: Percentile to calculate (0-100)
+
+    Returns:
+        Percentile value, or 0.0 if values list is empty
+    """
     if not values:
         return 0.0
     sorted_values = sorted(values)
@@ -101,19 +180,27 @@ def percentile(values: list[float], percentile: float) -> float:
 def compute_batch_metrics(
     metrics_list: list[RequestMetrics], batch_duration: float
 ) -> BatchInferenceStats:
-    """Compute batch-level inference metrics.
+    """Compute comprehensive batch-level performance metrics.
 
-    Parameters
-    ----------
-    metrics_list:
-        Collection of :class:`RequestMetrics` from each request in the batch.
-    batch_duration:
-        Total wall-clock time for processing the batch.
+    Analyzes multiple requests to calculate percentiles, averages,
+    and other aggregate statistics for batch processing evaluation.
 
-    Returns
-    -------
-    BatchInferenceStats
-        Aggregated statistics across all successful requests in the batch.
+    Args:
+        metrics_list: List of RequestMetrics from batch requests
+        batch_duration: Total time in seconds for batch processing
+
+    Returns:
+        BatchInferenceStats with percentiles, averages, and totals
+
+    Example:
+        >>> from llm_perf_tools.types import RequestMetrics
+        >>> metrics = [
+        ...     RequestMetrics(request_start=1000.0, first_token_time=1001.0, request_end=1003.0, output_tokens=20),
+        ...     RequestMetrics(request_start=1001.0, first_token_time=1002.0, request_end=1004.0, output_tokens=25)
+        ... ]
+        >>> batch_stats = compute_batch_metrics(metrics, 10.5)
+        >>> batch_stats.total_requests
+        2
     """
 
     if not metrics_list:
@@ -194,6 +281,34 @@ def compute_batch_metrics(
 
 
 class InferenceTracker:
+    """Tracks performance metrics for LLM inference requests.
+
+    Wraps an OpenAI client to measure response times, token throughput,
+    and other key performance indicators automatically.
+
+    Args:
+        client: OpenAI async client for making requests
+
+    Example:
+        Track metrics for a single request:
+
+        .. code-block:: python
+
+            from openai import AsyncOpenAI
+            from llm_perf_tools import InferenceTracker
+
+            client = AsyncOpenAI()
+            tracker = InferenceTracker(client)
+
+            response = await tracker.create_chat_completion(
+                messages=[{"role": "user", "content": "Hello"}],
+                model="gpt-5"
+            )
+
+            metrics = tracker.compute_metrics()
+            print(f"Time to first token: {metrics.avg_ttft:.3f}s")
+    """
+
     def __init__(self, client: Any):
         self.client = client
         self.metrics: list[RequestMetrics] = []

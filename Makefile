@@ -7,6 +7,9 @@ test:
 	--cov-report=term \
 	--cov-report=xml:coverage.xml
 
+test-docs:
+	poetry run pytest --doctest-modules src/llm_perf_tools/
+
 lint:
 	poetry run ruff check src/ examples/
 
@@ -24,3 +27,7 @@ run-single-dev:
 
 run-batch-dev:
 	PYTHONPATH=src python examples/ollama-tracker-batch-example.py
+
+docs:
+	poetry install --with docs
+	poetry run sphinx-build docs docs/_build

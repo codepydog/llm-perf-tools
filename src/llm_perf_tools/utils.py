@@ -8,6 +8,32 @@ def save_metrics_to_json(
     filename: str | None = None,
     output_dir: str | Path = ".",
 ) -> str:
+    """Export tracker metrics to JSON file.
+
+    Saves both raw request data and computed batch statistics
+    to a timestamped JSON file for analysis and reporting.
+
+    Args:
+        tracker: InferenceTracker instance with collected metrics
+        filename: Output filename (auto-generated if None)
+        output_dir: Directory to save file (default: current directory)
+
+    Returns:
+        Path to the saved JSON file
+
+    Example:
+        >>> import tempfile
+        >>> from unittest.mock import MagicMock
+        >>> from llm_perf_tools import InferenceTracker
+        >>> from llm_perf_tools.types import RequestMetrics
+        >>> tracker = InferenceTracker(MagicMock())
+        >>> tracker.metrics = [RequestMetrics(request_start=1000.0, request_end=1003.0)]
+        >>> tracker._start_time = 1000.0
+        >>> with tempfile.TemporaryDirectory() as tmpdir:
+        ...     filepath = save_metrics_to_json(tracker, "test.json", tmpdir)
+        ...     filepath.endswith("test.json")
+        True
+    """
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
 
