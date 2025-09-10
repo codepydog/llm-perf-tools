@@ -66,10 +66,21 @@ def compute_stats(metrics: RequestMetrics | list[RequestMetrics]) -> InferenceSt
     """
 
     if isinstance(metrics, RequestMetrics):
+        generation_time = (
+            metrics.request_end - metrics.first_token_time
+            if metrics.first_token_time and metrics.request_end
+            else None
+        )
+        tps = (
+            metrics.output_tokens / generation_time
+            if generation_time and generation_time > 0
+            else None
+        )
         return InferenceStats(
             ttft=time_to_first_token(metrics),
             e2e_latency=end_to_end_latency(metrics),
             itl=inter_token_latency(metrics),
+            tps=tps,
         )
 
     stats = InferenceStats()
@@ -135,6 +146,15 @@ def compute_batch_metrics(
                 tps = m.output_tokens / generation_time
                 tps_values.append(tps)
 
+    total_input_tokens = sum(m.input_tokens for m in successful_metrics)
+    total_output_tokens = sum(m.output_tokens for m in successful_metrics)
+    avg_input_tokens = (
+        total_input_tokens / len(successful_metrics) if successful_metrics else None
+    )
+    avg_output_tokens = (
+        total_output_tokens / len(successful_metrics) if successful_metrics else None
+    )
+
     rps = len(successful_metrics) / batch_duration if batch_duration > 0 else 0
 
     return BatchInferenceStats(
@@ -162,6 +182,11 @@ def compute_batch_metrics(
         p1_tps=percentile(tps_values, 1) if tps_values else None,
         min_tps=min(tps_values) if tps_values else None,
         max_tps=max(tps_values) if tps_values else None,
+        overall_tps=tokens_per_second(successful_metrics),
+        total_input_tokens=total_input_tokens,
+        total_output_tokens=total_output_tokens,
+        avg_input_tokens=avg_input_tokens,
+        avg_output_tokens=avg_output_tokens,
         rps=rps,
         total_requests=len(metrics_list),
         successful_requests=len(successful_metrics),
