@@ -3,7 +3,7 @@ import time
 
 from openai import AsyncOpenAI
 
-from llm_perf_tools import RequestMetrics, calculate_stats
+from llm_perf_tools import RequestMetrics, compute_stats
 
 
 # Prerequisites: Launch Ollama server with: ollama run gpt-oss:20b
@@ -46,7 +46,7 @@ async def main():
         output_tokens=output_tokens,
     )
 
-    stats = calculate_stats(metrics)
+    stats = compute_stats(metrics)
 
     print("\nInference Metrics:")
     print(
@@ -65,7 +65,7 @@ async def main():
     print(f"  Input tokens: {metrics.input_tokens}")
     print(f"  Output tokens: {metrics.output_tokens}")
 
-    # For single request, calculate TPS from generation time
+    # For single request, compute TPS from generation time
     if stats.ttft and stats.e2e_latency and metrics.output_tokens > 0:
         generation_time = stats.e2e_latency - stats.ttft
         tps = metrics.output_tokens / generation_time if generation_time > 0 else 0

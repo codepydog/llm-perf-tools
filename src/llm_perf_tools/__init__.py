@@ -6,7 +6,7 @@ from .inference import (
     inter_token_latency,
     tokens_per_second,
     requests_per_second,
-    calculate_stats,
+    compute_stats,
     percentile,
     compute_batch_metrics,
 )
@@ -22,7 +22,7 @@ __all__ = [
     "inter_token_latency",
     "tokens_per_second",
     "requests_per_second",
-    "calculate_stats",
+    "compute_stats",
     "percentile",
     "compute_batch_metrics",
     "save_metrics_to_json",
