@@ -50,7 +50,21 @@ def requests_per_second(metrics: list[RequestMetrics], duration: float) -> float
     return completed_requests / duration
 
 
-def calculate_stats(metrics: RequestMetrics | list[RequestMetrics]) -> InferenceStats:
+def compute_stats(metrics: RequestMetrics | list[RequestMetrics]) -> InferenceStats:
+    """Compute inference statistics for a single request or a batch.
+
+    Parameters
+    ----------
+    metrics:
+        Either a single :class:`RequestMetrics` instance or a list of them.
+
+    Returns
+    -------
+    InferenceStats
+        Aggregated statistics such as time to first token and tokens per
+        second.
+    """
+
     if isinstance(metrics, RequestMetrics):
         return InferenceStats(
             ttft=time_to_first_token(metrics),
@@ -76,6 +90,21 @@ def percentile(values: list[float], percentile: float) -> float:
 def compute_batch_metrics(
     metrics_list: list[RequestMetrics], batch_duration: float
 ) -> BatchInferenceStats:
+    """Compute batch-level inference metrics.
+
+    Parameters
+    ----------
+    metrics_list:
+        Collection of :class:`RequestMetrics` from each request in the batch.
+    batch_duration:
+        Total wall-clock time for processing the batch.
+
+    Returns
+    -------
+    BatchInferenceStats
+        Aggregated statistics across all successful requests in the batch.
+    """
+
     if not metrics_list:
         return BatchInferenceStats()
 

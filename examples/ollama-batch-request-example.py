@@ -3,7 +3,7 @@ import time
 
 from openai import AsyncOpenAI
 
-from llm_perf_tools import RequestMetrics, BatchInferenceStats
+from llm_perf_tools import RequestMetrics, compute_batch_metrics
 
 
 async def make_request(
@@ -54,80 +54,6 @@ async def make_request(
         )
 
 
-def calculate_percentile(values: list[float], percentile: float) -> float:
-    if not values:
-        return 0.0
-    sorted_values = sorted(values)
-    index = int((percentile / 100) * (len(sorted_values) - 1))
-    return sorted_values[index]
-
-
-def calculate_batch_stats(
-    metrics_list: list[RequestMetrics], batch_duration: float
-) -> BatchInferenceStats:
-    if not metrics_list:
-        return BatchInferenceStats()
-
-    successful_metrics = [m for m in metrics_list if m.request_end is not None]
-
-    ttft_values = [
-        m.first_token_time - m.request_start
-        for m in successful_metrics
-        if m.first_token_time is not None
-    ]
-
-    e2e_values = [
-        m.request_end - m.request_start
-        for m in successful_metrics
-        if m.request_end is not None
-    ]
-
-    itl_values = []
-    tps_values = []
-
-    for m in successful_metrics:
-        if m.first_token_time and m.request_end and m.output_tokens > 1:
-            generation_time = m.request_end - m.first_token_time
-            itl = generation_time / (m.output_tokens - 1)
-            itl_values.append(itl)
-
-            if generation_time > 0:
-                tps = m.output_tokens / generation_time
-                tps_values.append(tps)
-
-    rps = len(successful_metrics) / batch_duration if batch_duration > 0 else 0
-
-    return BatchInferenceStats(
-        avg_ttft=sum(ttft_values) / len(ttft_values) if ttft_values else None,
-        p50_ttft=calculate_percentile(ttft_values, 50) if ttft_values else None,
-        p95_ttft=calculate_percentile(ttft_values, 95) if ttft_values else None,
-        p99_ttft=calculate_percentile(ttft_values, 99) if ttft_values else None,
-        min_ttft=min(ttft_values) if ttft_values else None,
-        max_ttft=max(ttft_values) if ttft_values else None,
-        avg_e2e_latency=sum(e2e_values) / len(e2e_values) if e2e_values else None,
-        p50_e2e_latency=calculate_percentile(e2e_values, 50) if e2e_values else None,
-        p95_e2e_latency=calculate_percentile(e2e_values, 95) if e2e_values else None,
-        p99_e2e_latency=calculate_percentile(e2e_values, 99) if e2e_values else None,
-        min_e2e_latency=min(e2e_values) if e2e_values else None,
-        max_e2e_latency=max(e2e_values) if e2e_values else None,
-        avg_itl=sum(itl_values) / len(itl_values) if itl_values else None,
-        p50_itl=calculate_percentile(itl_values, 50) if itl_values else None,
-        p95_itl=calculate_percentile(itl_values, 95) if itl_values else None,
-        p99_itl=calculate_percentile(itl_values, 99) if itl_values else None,
-        min_itl=min(itl_values) if itl_values else None,
-        max_itl=max(itl_values) if itl_values else None,
-        avg_tps=sum(tps_values) / len(tps_values) if tps_values else None,
-        p50_tps=calculate_percentile(tps_values, 50) if tps_values else None,
-        p5_tps=calculate_percentile(tps_values, 5) if tps_values else None,
-        p1_tps=calculate_percentile(tps_values, 1) if tps_values else None,
-        min_tps=min(tps_values) if tps_values else None,
-        max_tps=max(tps_values) if tps_values else None,
-        rps=rps,
-        total_requests=len(metrics_list),
-        successful_requests=len(successful_metrics),
-    )
-
-
 async def main():
     client = AsyncOpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
 
@@ -163,7 +89,7 @@ async def main():
     print("=" * 80)
     print(f"\nBatch completed in {batch_duration:.3f}s")
 
-    stats = calculate_batch_stats(metrics_list, batch_duration)
+    stats = compute_batch_metrics(metrics_list, batch_duration)
 
     print("\nBatch Inference Metrics:")
     print(f"  Total Requests: {stats.total_requests}")
