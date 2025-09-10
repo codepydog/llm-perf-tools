@@ -2,7 +2,10 @@ install:
 	poetry install
 
 test:
-	poetry run pytest
+	poetry run pytest -vv tests \
+	--cov=. \
+	--cov-report=term \
+	--cov-report=xml:coverage.xml
 
 lint:
 	poetry run ruff check src/ examples/
