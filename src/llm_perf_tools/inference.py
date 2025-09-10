@@ -328,7 +328,6 @@ class InferenceTracker:
         response_format: dict[str, Any] | None = None,
         seed: int | None = None,
         stop: str | list[str] | None = None,
-        stream: bool | None = None,
         temperature: float | None = None,
         top_p: float | None = None,
         tools: list[dict] | None = None,
@@ -336,6 +335,11 @@ class InferenceTracker:
         user: str | None = None,
         **kwargs,
     ) -> str:
+        """Chat completion API compatible with OpenAI client.
+        
+        Same interface as OpenAI's create() method, except stream=True 
+        is always enforced for performance metrics collection.
+        """
         if self._start_time is None:
             self._start_time = time.time()
 
@@ -355,7 +359,6 @@ class InferenceTracker:
                     "response_format": response_format,
                     "seed": seed,
                     "stop": stop,
-                    "stream": stream,
                     "temperature": temperature,
                     "top_p": top_p,
                     "tools": tools,
