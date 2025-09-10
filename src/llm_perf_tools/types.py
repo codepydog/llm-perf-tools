@@ -48,6 +48,13 @@ class BatchInferenceStats(BaseModel):
     p1_tps: float | None = None
     min_tps: float | None = None
     max_tps: float | None = None
+    overall_tps: float | None = None
+
+    # Token Counts
+    total_input_tokens: int = 0
+    total_output_tokens: int = 0
+    avg_input_tokens: float | None = None
+    avg_output_tokens: float | None = None
 
     # Requests Per Second
     rps: float | None = None

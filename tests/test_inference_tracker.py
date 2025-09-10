@@ -24,7 +24,7 @@ async def test_create_chat_completion_tracks_metrics(mocker):
 
     mocker.patch(
         "llm_perf_tools.inference.time.time",
-        side_effect=[0.0, 1.0, 2.0, 3.0],
+        side_effect=[0.0, 1.0, 2.0, 3.0, 4.0],
     )
 
     messages = [{"role": "user", "content": "hello world"}]
@@ -45,6 +45,13 @@ async def test_create_chat_completion_tracks_metrics(mocker):
     assert metric.request_end == 3.0
     assert metric.input_tokens == 2
     assert metric.output_tokens == 2
+
+    stats = tracker.compute_metrics()
+    assert stats.total_input_tokens == 2
+    assert stats.total_output_tokens == 2
+    assert stats.avg_input_tokens == 2
+    assert stats.avg_output_tokens == 2
+    assert stats.overall_tps == pytest.approx(1.0)
 
     mock_create.assert_called_once_with(
         model=model, messages=messages, stream=True, max_tokens=5
