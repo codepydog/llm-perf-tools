@@ -96,3 +96,41 @@ async def main():
 
 asyncio.run(main())
 ```
+
+### Visualization
+
+Visualize performance metrics with built-in plotting:
+
+```python
+from llm_perf_tools import plot_eval_result
+
+# Plot metrics from saved evaluation results
+inference_path = "eval_results/batch_metrics.json"
+gpu_path = "eval_results/gpu_metrics.csv"
+
+plots = plot_eval_result(inference_path, gpu_path)
+
+# Save plots
+plots[0].savefig("inference_metrics.png", dpi=300, bbox_inches='tight')
+plots[1].savefig("gpu_metrics.png", dpi=300, bbox_inches='tight')
+
+print("Performance plots saved")
+```
+
+This generates two comprehensive plots:
+
+**Inference Metrics Plot**:
+![Inference Metrics](figures/inference_metrics.png)
+
+- Time to First Token (TTFT) distribution and timeline
+- End-to-End Latency trends over time
+- Tokens per Second (TPS) performance
+- Inter-Token Latency (ITL) statistics
+
+**GPU Metrics Plot**:
+![GPU Metrics](figures/gpu_metrics.png)
+
+- GPU utilization percentage over time
+- Memory usage (used vs total)
+- Temperature monitoring
+- Power consumption tracking
