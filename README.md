@@ -70,36 +70,29 @@ asyncio.run(main())
 
 ```
 
-## TODO
+### GPU Monitoring
 
-1. **Enhance batch statistics in `compute_stats`**
-   - Aggregate TTFT, first-token, and end-to-end latency for lists of `RequestMetrics`.
-   - Compute 50th/95th/99th percentile latencies with NumPy.
-   - Extend the `InferenceStats` dataclass and update existing callers.
-   - Add tests exercising batched latency and throughput reporting.
+Basic GPU usage tracking:
 
-2. **Support pluggable tokenizers**
-   - Introduce a tokenizer interface with a default whitespace implementation.
-   - Integrate optional [`tiktoken`](https://github.com/openai/tiktoken) support for OpenAI models.
-   - Allow `InferenceTracker` to accept a tokenizer via configuration.
-   - Document tokenizer selection and update usage examples.
+```python
+import asyncio
+from openai import AsyncOpenAI
+from llm_perf_tools import InferenceTracker, monitor_gpu_usage
 
-3. **Track errors and request costs**
-   - Add `error_type` and `cost` fields to `RequestMetrics`.
-   - Capture exceptions during requests and record prompt/completion token counts.
-   - Compute costs from a model pricing table and expose totals in reports.
-   - Emit cost and error summaries in JSON exports and CLI output.
+async def main():
+    # Setup client for local LLM server (e.g., SGLang, vLLM, Ollama)
+    client = AsyncOpenAI(base_url="http://localhost:30000/v1", api_key="None")
+    
+    with monitor_gpu_usage("gpu_metrics.csv", interval=0.1) as gpu_metrics:
+        tracker = InferenceTracker(client)
+        
+        response = await tracker.create_chat_completion(
+            messages=[{"role": "user", "content": "Hello"}],
+            model="meta-llama/Llama-3.2-8B-Instruct"  # Replace with your model
+        )
+    
+    print(f"Collected {len(gpu_metrics)} GPU samples")
+    print("GPU metrics saved to gpu_metrics.csv")
 
-4. **Provide CLI commands and visualizations**
-   - Build a CLI (e.g., with Typer) exposing run/export/report commands.
-   - Generate matplotlib histograms for TTFT and throughput.
-   - Support saving plots to disk for later analysis.
-   - Supply CLI examples and documentation.
-
-5. **Expand test coverage**
-   - Test `save_metrics_to_json` and verify exported contents.
-   - Add integration tests for concurrent requests and error paths.
-   - Exercise cost computations and tokenizer variations.
-   - Cover CLI entry points to guard against regressions.
-
-
+asyncio.run(main())
+```

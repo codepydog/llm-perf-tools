@@ -67,3 +67,14 @@ class BatchInferenceStats(BaseModel):
 
     total_requests: int = 0
     successful_requests: int = 0
+
+
+class GPUMetrics(BaseModel):
+    timestamp: float
+    gpu_id: int
+    memory_used_mb: int
+    memory_total_mb: int
+    memory_utilization_percent: float
+    gpu_utilization_percent: int
+    temperature_celsius: int
+    power_draw_watts: float

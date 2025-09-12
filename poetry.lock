@@ -718,6 +718,18 @@ files = [
 ]
 
 [[package]]
+name = "nvidia-ml-py"
+version = "13.580.82"
+description = "Python Bindings for the NVIDIA Management Library"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "nvidia_ml_py-13.580.82-py3-none-any.whl", hash = "sha256:4361db337b0c551e2d101936dae2e9a60f957af26818e8c0c3a1f32b8db8d0a7"},
+    {file = "nvidia_ml_py-13.580.82.tar.gz", hash = "sha256:0c028805dc53a0e2a6985ea801888197765ac2ef8f1c9e29a7bf0d3616a5efc7"},
+]
+
+[[package]]
 name = "openai"
 version = "1.107.0"
 description = "The official Python library for the openai API"
@@ -1428,4 +1440,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.14"
-content-hash = "617c58268f2da69ea7971f67370f3080f3114514d1f1bc8461059fcadee56eda"
+content-hash = "d6187bfb8ea86e3a7bbc6c0b829f6fbf995ed53c70ac622b2e279607ae458f5b"
