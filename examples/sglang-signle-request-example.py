@@ -4,6 +4,8 @@ from llm_perf_tools import InferenceTracker
 from dotenv import load_dotenv
 from rich.console import Console
 
+from llm_perf_tools.utils import save_metrics_to_json
+
 load_dotenv()
 
 # sglang
@@ -28,6 +30,8 @@ async def main():
     metrics = tracker.compute_metrics()
     console.print("\n[bold blue]Metrics:[/bold blue]")
     console.print(metrics)
+
+    save_metrics_to_json(tracker=tracker, filename="sglang_single_metrics.json")
 
 
 if __name__ == "__main__":
