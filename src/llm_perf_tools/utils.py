@@ -83,7 +83,7 @@ def load_gpu_data(csv_path: str | Path) -> list[GPUMetrics]:
     path = Path(csv_path)
     if not path.exists():
         raise FileNotFoundError(f"GPU data file not found: {path}")
-    
+
     metrics = []
     with open(path, "r") as f:
         reader = csv.DictReader(f)

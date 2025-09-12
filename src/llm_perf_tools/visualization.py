@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.figure
 import seaborn as sns
-import pandas as pd
 
 from .types import GPUMetrics
 from .utils import load_inference_data, load_gpu_data
@@ -11,10 +10,10 @@ sns.set_style("whitegrid")
 
 def plot_inference_metrics(data: dict) -> matplotlib.figure.Figure:
     batch_stats = data.get("batch_stats", {})
-    
+
     fig, axes = plt.subplots(2, 2, figsize=(12, 8))
     fig.suptitle("Inference Metrics", fontsize=16)
-    
+
     if batch_stats.get("avg_ttft"):
         ttft_data = [
             batch_stats["min_ttft"],
@@ -26,7 +25,7 @@ def plot_inference_metrics(data: dict) -> matplotlib.figure.Figure:
         axes[0, 0].boxplot(ttft_data)
         axes[0, 0].set_title("TTFT Distribution")
         axes[0, 0].set_ylabel("Time (s)")
-    
+
     if batch_stats.get("avg_e2e_latency"):
         e2e_data = [
             batch_stats["min_e2e_latency"],
@@ -38,7 +37,7 @@ def plot_inference_metrics(data: dict) -> matplotlib.figure.Figure:
         axes[0, 1].boxplot(e2e_data)
         axes[0, 1].set_title("End-to-End Latency")
         axes[0, 1].set_ylabel("Time (s)")
-    
+
     if batch_stats.get("avg_tps"):
         tps_data = [
             batch_stats["min_tps"],
@@ -49,14 +48,16 @@ def plot_inference_metrics(data: dict) -> matplotlib.figure.Figure:
         axes[1, 0].hist(tps_data, bins=10)
         axes[1, 0].set_title("TPS Distribution")
         axes[1, 0].set_xlabel("Tokens/sec")
-    
+
     successful = batch_stats.get("successful_requests", 0)
     total = batch_stats.get("total_requests", 0)
     failed = total - successful
-    
-    axes[1, 1].pie([successful, failed], labels=["Successful", "Failed"], autopct="%1.1f%%")
+
+    axes[1, 1].pie(
+        [successful, failed], labels=["Successful", "Failed"], autopct="%1.1f%%"
+    )
     axes[1, 1].set_title("Request Summary")
-    
+
     plt.tight_layout()
     return fig
 
@@ -94,7 +95,11 @@ def plot_gpu_metrics(gpu_metrics: list[GPUMetrics]) -> matplotlib.figure.Figure:
     return fig
 
 
-def plot_eval_result(inference_path: str, gpu_path: str | None = None) -> matplotlib.figure.Figure | tuple[matplotlib.figure.Figure, matplotlib.figure.Figure]:
+def plot_eval_result(
+    inference_path: str, gpu_path: str | None = None
+) -> (
+    matplotlib.figure.Figure | tuple[matplotlib.figure.Figure, matplotlib.figure.Figure]
+):
     inference_data = load_inference_data(inference_path)
     inference_fig = plot_inference_metrics(inference_data)
 
