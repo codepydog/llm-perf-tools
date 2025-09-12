@@ -336,8 +336,8 @@ class InferenceTracker:
         **kwargs,
     ) -> str:
         """Chat completion API compatible with OpenAI client.
-        
-        Same interface as OpenAI's create() method, except stream=True 
+
+        Same interface as OpenAI's create() method, except stream=True
         is always enforced for performance metrics collection.
         """
         if self._start_time is None:
