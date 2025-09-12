@@ -7,6 +7,12 @@ class RequestMetrics(BaseModel):
     request_end: float | None = None
     input_tokens: int = 0
     output_tokens: int = 0
+    ttft: float | None = None
+    e2e_latency: float | None = None
+    itl: float | None = None
+    tps: float | None = None
+    prefill_time: float | None = None
+    decode_time: float | None = None
 
 
 class InferenceStats(BaseModel):

@@ -12,7 +12,7 @@ async def main():
 
     messages = [{"role": "user", "content": "Hello! Please say hello back."}]
 
-    request_start = time.time()
+    request_start = time.perf_counter()
 
     response = await client.chat.completions.create(
         model="gpt-oss:20b", messages=messages, stream=True
@@ -26,17 +26,25 @@ async def main():
     async for chunk in response:
         if chunk.choices and chunk.choices[0].delta.content:
             if first_token_time is None:
-                first_token_time = time.time()
+                first_token_time = time.perf_counter()
             content = chunk.choices[0].delta.content
             print(content, end="", flush=True)
             content_chunks.append(content)
 
     print()  # New line after streaming
-    request_end = time.time()
+    request_end = time.perf_counter()
     full_content = "".join(content_chunks)
 
     input_tokens = len(" ".join(msg["content"] for msg in messages).split())
     output_tokens = len(full_content.split())
+
+    ttft = first_token_time - request_start if first_token_time else None
+    e2e_latency = request_end - request_start
+    decode_time = request_end - first_token_time if first_token_time else None
+    itl = (
+        decode_time / (output_tokens - 1) if decode_time and output_tokens > 1 else None
+    )
+    tps = output_tokens / decode_time if decode_time and decode_time > 0 else None
 
     metrics = RequestMetrics(
         request_start=request_start,
@@ -44,6 +52,12 @@ async def main():
         request_end=request_end,
         input_tokens=input_tokens,
         output_tokens=output_tokens,
+        ttft=ttft,
+        e2e_latency=e2e_latency,
+        itl=itl,
+        tps=tps,
+        prefill_time=ttft,
+        decode_time=decode_time,
     )
 
     stats = compute_stats(metrics)

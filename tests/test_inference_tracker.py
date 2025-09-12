@@ -23,7 +23,7 @@ async def test_create_chat_completion_tracks_metrics(mocker):
     tracker = InferenceTracker(mock_client)
 
     mocker.patch(
-        "llm_perf_tools.inference.time.time",
+        "llm_perf_tools.inference.time.perf_counter",
         side_effect=[0.0, 1.0, 2.0, 3.0, 4.0],
     )
 

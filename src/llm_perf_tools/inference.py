@@ -341,9 +341,9 @@ class InferenceTracker:
         is always enforced for performance metrics collection.
         """
         if self._start_time is None:
-            self._start_time = time.time()
+            self._start_time = time.perf_counter()
 
-        request_start = time.time()
+        request_start = time.perf_counter()
 
         kwargs.update(
             {
@@ -380,15 +380,27 @@ class InferenceTracker:
             async for chunk in response:
                 if chunk.choices and chunk.choices[0].delta.content:
                     if first_token_time is None:
-                        first_token_time = time.time()
+                        first_token_time = time.perf_counter()
                     content = chunk.choices[0].delta.content
                     content_chunks.append(content)
 
-            request_end = time.time()
+            request_end = time.perf_counter()
             full_content = "".join(content_chunks)
 
             input_tokens = len(" ".join(msg["content"] for msg in messages).split())
             output_tokens = len(full_content.split())
+
+            ttft = first_token_time - request_start if first_token_time else None
+            e2e_latency = request_end - request_start
+            decode_time = request_end - first_token_time if first_token_time else None
+            itl = (
+                decode_time / (output_tokens - 1)
+                if decode_time and output_tokens > 1
+                else None
+            )
+            tps = (
+                output_tokens / decode_time if decode_time and decode_time > 0 else None
+            )
 
             metrics = RequestMetrics(
                 request_start=request_start,
@@ -396,19 +408,31 @@ class InferenceTracker:
                 request_end=request_end,
                 input_tokens=input_tokens,
                 output_tokens=output_tokens,
+                ttft=ttft,
+                e2e_latency=e2e_latency,
+                itl=itl,
+                tps=tps,
+                prefill_time=ttft,
+                decode_time=decode_time,
             )
 
             self.metrics.append(metrics)
             return full_content
 
         except Exception as e:
-            request_end = time.time()
+            request_end = time.perf_counter()
             failed_metrics = RequestMetrics(
                 request_start=request_start,
                 first_token_time=None,
                 request_end=request_end,
                 input_tokens=0,
                 output_tokens=0,
+                ttft=None,
+                e2e_latency=request_end - request_start,
+                itl=None,
+                tps=None,
+                prefill_time=None,
+                decode_time=None,
             )
             self.metrics.append(failed_metrics)
             raise e
@@ -417,7 +441,7 @@ class InferenceTracker:
         if not self.metrics or self._start_time is None:
             return BatchInferenceStats()
 
-        current_time = time.time()
+        current_time = time.perf_counter()
         batch_duration = current_time - self._start_time
         return compute_batch_metrics(self.metrics, batch_duration)
 
