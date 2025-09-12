@@ -10,7 +10,12 @@ from .inference import (
     percentile,
     compute_batch_metrics,
 )
-from .utils import save_metrics_to_json
+from .utils import save_metrics_to_json, load_inference_data, load_gpu_data
+from .visualization import (
+    plot_inference_metrics,
+    plot_gpu_metrics,
+    plot_eval_result,
+)
 from .gpu import monitor_gpu_usage
 
 __all__ = [
@@ -28,6 +33,11 @@ __all__ = [
     "percentile",
     "compute_batch_metrics",
     "save_metrics_to_json",
+    "load_inference_data",
+    "load_gpu_data",
+    "plot_inference_metrics",
+    "plot_gpu_metrics",
+    "plot_eval_result",
     "monitor_gpu_usage",
 ]
 

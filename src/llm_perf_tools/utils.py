@@ -1,6 +1,10 @@
 import json
+import csv
 from datetime import datetime
 from pathlib import Path
+from typing import Any
+
+from .types import GPUMetrics
 
 
 def save_metrics_to_json(
@@ -65,3 +69,35 @@ def save_metrics_to_json(
         json.dump(data, f, indent=2)
 
     return str(file_path)
+
+
+def load_inference_data(json_path: str | Path) -> dict[str, Any]:
+    path = Path(json_path)
+    if not path.exists():
+        raise FileNotFoundError(f"Inference data file not found: {path}")
+    with open(path, "r") as f:
+        return json.load(f)
+
+
+def load_gpu_data(csv_path: str | Path) -> list[GPUMetrics]:
+    path = Path(csv_path)
+    if not path.exists():
+        raise FileNotFoundError(f"GPU data file not found: {path}")
+    
+    metrics = []
+    with open(path, "r") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            metrics.append(
+                GPUMetrics(
+                    timestamp=float(row["timestamp"]),
+                    gpu_id=int(row["gpu_id"]),
+                    memory_used_mb=int(row["memory_used_mb"]),
+                    memory_total_mb=int(row["memory_total_mb"]),
+                    memory_utilization_percent=float(row["memory_utilization_percent"]),
+                    gpu_utilization_percent=int(row["gpu_utilization_percent"]),
+                    temperature_celsius=int(row["temperature_celsius"]),
+                    power_draw_watts=float(row["power_draw_watts"]),
+                )
+            )
+    return metrics
