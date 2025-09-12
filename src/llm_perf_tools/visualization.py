@@ -66,30 +66,46 @@ def plot_gpu_metrics(gpu_metrics: list[GPUMetrics]) -> matplotlib.figure.Figure:
     if not gpu_metrics:
         return plt.figure()
 
-    timestamps = [m.timestamp for m in gpu_metrics]
-    start_time = min(timestamps)
-    relative_times = [(t - start_time) for t in timestamps]
+    gpu_data = {}
+    for metric in gpu_metrics:
+        if metric.gpu_id not in gpu_data:
+            gpu_data[metric.gpu_id] = []
+        gpu_data[metric.gpu_id].append(metric)
 
-    fig, axes = plt.subplots(2, 2, figsize=(12, 8))
-    fig.suptitle("GPU Metrics", fontsize=16)
+    gpu_ids = sorted(gpu_data.keys())
+    num_gpus = len(gpu_ids)
+    
+    fig, axes = plt.subplots(num_gpus, 4, figsize=(16, 4 * num_gpus))
+    if num_gpus == 1:
+        axes = axes.reshape(1, -1)
+    
+    fig.suptitle("GPU Metrics by GPU ID", fontsize=16)
 
-    axes[0, 0].plot(relative_times, [m.gpu_utilization_percent for m in gpu_metrics])
-    axes[0, 0].set_title("GPU Utilization")
-    axes[0, 0].set_ylabel("Utilization (%)")
+    for i, gpu_id in enumerate(gpu_ids):
+        metrics = gpu_data[gpu_id]
+        timestamps = [m.timestamp for m in metrics]
+        start_time = min(timestamps)
+        relative_times = [(t - start_time) for t in timestamps]
 
-    axes[0, 1].plot(relative_times, [m.memory_utilization_percent for m in gpu_metrics])
-    axes[0, 1].set_title("Memory Usage")
-    axes[0, 1].set_ylabel("Memory (%)")
+        axes[i, 0].plot(relative_times, [m.gpu_utilization_percent for m in metrics])
+        axes[i, 0].set_title(f"GPU {gpu_id} Utilization")
+        axes[i, 0].set_ylabel("Utilization (%)")
 
-    axes[1, 0].plot(relative_times, [m.temperature_celsius for m in gpu_metrics])
-    axes[1, 0].set_title("Temperature")
-    axes[1, 0].set_ylabel("Temperature (°C)")
-    axes[1, 0].set_xlabel("Time (s)")
+        axes[i, 1].plot(relative_times, [m.memory_utilization_percent for m in metrics])
+        axes[i, 1].set_title(f"GPU {gpu_id} Memory Usage")
+        axes[i, 1].set_ylabel("Memory (%)")
 
-    axes[1, 1].plot(relative_times, [m.power_draw_watts for m in gpu_metrics])
-    axes[1, 1].set_title("Power Draw")
-    axes[1, 1].set_ylabel("Power (W)")
-    axes[1, 1].set_xlabel("Time (s)")
+        axes[i, 2].plot(relative_times, [m.temperature_celsius for m in metrics])
+        axes[i, 2].set_title(f"GPU {gpu_id} Temperature")
+        axes[i, 2].set_ylabel("Temperature (°C)")
+
+        axes[i, 3].plot(relative_times, [m.power_draw_watts for m in metrics])
+        axes[i, 3].set_title(f"GPU {gpu_id} Power Draw")
+        axes[i, 3].set_ylabel("Power (W)")
+
+        if i == num_gpus - 1:
+            axes[i, 2].set_xlabel("Time (s)")
+            axes[i, 3].set_xlabel("Time (s)")
 
     plt.tight_layout()
     return fig
