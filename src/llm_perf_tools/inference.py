@@ -1,6 +1,8 @@
 import time
 from typing import Any, Callable
 
+from transformers import AutoTokenizer
+
 from .types import RequestMetrics, InferenceStats, BatchInferenceStats
 
 
@@ -289,7 +291,7 @@ class InferenceTracker:
     Args:
         client: OpenAI async client for making requests
         tokenizer: Optional callable that returns the token count for a
-            given string. Defaults to simple whitespace splitting.
+            given string. Defaults to openai/gpt-oss-20b tokenizer.
 
     Example:
         Track metrics for a single request:
@@ -313,7 +315,11 @@ class InferenceTracker:
 
     def __init__(self, client: Any, tokenizer: Callable[[str], int] | None = None):
         self.client = client
-        self.tokenizer = tokenizer or (lambda text: len(text.split()))
+        if tokenizer is None:
+            default_tokenizer = AutoTokenizer.from_pretrained("openai/gpt-oss-20b")
+            self.tokenizer = lambda text: len(default_tokenizer.encode(text))
+        else:
+            self.tokenizer = tokenizer
         self.metrics: list[RequestMetrics] = []
         self._start_time: float | None = None
 

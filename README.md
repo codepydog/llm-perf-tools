@@ -52,9 +52,9 @@ async def main():
         base_url=os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
     )
 
-    # Use GPT-5 tokenizer for accurate token counting
-    tokenizer = tiktoken.encoding_for_model("gpt-5").encode
-    tracker = InferenceTracker(client, tokenizer=tokenizer)
+    # Custom tokenizer for GPT-5 
+    enc = tiktoken.encoding_for_model("gpt-5")
+    tracker = InferenceTracker(client, tokenizer=enc.encode)
 
     # Track a request
     response = await tracker.create_chat_completion(

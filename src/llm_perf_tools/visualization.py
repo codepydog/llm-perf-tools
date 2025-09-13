@@ -74,11 +74,11 @@ def plot_gpu_metrics(gpu_metrics: list[GPUMetrics]) -> matplotlib.figure.Figure:
 
     gpu_ids = sorted(gpu_data.keys())
     num_gpus = len(gpu_ids)
-    
+
     fig, axes = plt.subplots(num_gpus, 4, figsize=(16, 4 * num_gpus))
     if num_gpus == 1:
         axes = axes.reshape(1, -1)
-    
+
     fig.suptitle("GPU Metrics by GPU ID", fontsize=16)
 
     for i, gpu_id in enumerate(gpu_ids):
