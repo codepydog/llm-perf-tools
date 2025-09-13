@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "llm-perf-tools"
-version = "0.1.0"
+version = "0.2.0"
 description = "Tool for monitoring LLM inference metrics"
 authors = ["codepydog <codepydog@gmail.com>"]
 readme = "README.md"
