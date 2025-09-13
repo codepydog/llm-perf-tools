@@ -342,6 +342,7 @@ class InferenceTracker:
         tools: list[dict] | None = None,
         tool_choice: str | dict | None = None,
         user: str | None = None,
+        show_streaming: bool = False,
         **kwargs,
     ) -> str:
         """Chat completion API compatible with OpenAI client.
@@ -391,6 +392,8 @@ class InferenceTracker:
                     if first_token_time is None:
                         first_token_time = time.perf_counter()
                     content = chunk.choices[0].delta.content
+                    if show_streaming:
+                        print(content, end="", flush=True)
                     content_chunks.append(content)
 
             request_end = time.perf_counter()
