@@ -56,3 +56,47 @@ async def test_create_chat_completion_tracks_metrics(mocker):
     mock_create.assert_called_once_with(
         model=model, messages=messages, stream=True, max_tokens=5
     )
+
+
+@pytest.mark.asyncio
+async def test_custom_tokenizer_is_used(mocker):
+    tokens = ["hello", " world"]
+
+    async def fake_response():
+        for token in tokens:
+            yield SimpleNamespace(
+                choices=[SimpleNamespace(delta=SimpleNamespace(content=token))]
+            )
+
+    mock_create = mocker.AsyncMock(return_value=fake_response())
+    mock_client = SimpleNamespace(
+        chat=SimpleNamespace(completions=SimpleNamespace(create=mock_create))
+    )
+
+    def char_tokenizer(text: str) -> int:
+        return len(text)
+
+    tracker = InferenceTracker(mock_client, tokenizer=char_tokenizer)
+
+    mocker.patch(
+        "llm_perf_tools.inference.time.perf_counter",
+        side_effect=[0.0, 1.0, 2.0, 3.0, 4.0],
+    )
+
+    messages = [{"role": "user", "content": "hello world"}]
+    model = "gpt-test"
+
+    result = await tracker.create_chat_completion(
+        messages=messages, model=model, max_tokens=5
+    )
+
+    assert result == "hello world"
+    metric = tracker.metrics[0]
+    assert metric.input_tokens == 11
+    assert metric.output_tokens == 11
+
+    stats = tracker.compute_metrics()
+    assert stats.total_input_tokens == 11
+    assert stats.total_output_tokens == 11
+    assert stats.avg_input_tokens == 11
+    assert stats.avg_output_tokens == 11
