@@ -1,5 +1,5 @@
 import time
-from typing import Any
+from typing import Any, Callable
 
 from .types import RequestMetrics, InferenceStats, BatchInferenceStats
 
@@ -288,6 +288,8 @@ class InferenceTracker:
 
     Args:
         client: OpenAI async client for making requests
+        tokenizer: Optional callable that returns the token count for a
+            given string. Defaults to simple whitespace splitting.
 
     Example:
         Track metrics for a single request:
@@ -309,8 +311,9 @@ class InferenceTracker:
             print(f"Time to first token: {metrics.avg_ttft:.3f}s")
     """
 
-    def __init__(self, client: Any):
+    def __init__(self, client: Any, tokenizer: Callable[[str], int] | None = None):
         self.client = client
+        self.tokenizer = tokenizer or (lambda text: len(text.split()))
         self.metrics: list[RequestMetrics] = []
         self._start_time: float | None = None
 
@@ -387,8 +390,9 @@ class InferenceTracker:
             request_end = time.perf_counter()
             full_content = "".join(content_chunks)
 
-            input_tokens = len(" ".join(msg["content"] for msg in messages).split())
-            output_tokens = len(full_content.split())
+            input_text = " ".join(msg["content"] for msg in messages)
+            input_tokens = self.tokenizer(input_text)
+            output_tokens = self.tokenizer(full_content)
 
             ttft = first_token_time - request_start if first_token_time else None
             e2e_latency = request_end - request_start

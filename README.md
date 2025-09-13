@@ -41,6 +41,7 @@ import os
 from openai import AsyncOpenAI
 from llm_perf_tools import InferenceTracker
 from dotenv import load_dotenv
+import tiktoken
 
 load_dotenv()
 
@@ -50,7 +51,10 @@ async def main():
         api_key=os.getenv("OPENAI_API_KEY"),
         base_url=os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
     )
-    tracker = InferenceTracker(client)
+
+    # Use GPT-5 tokenizer for accurate token counting
+    tokenizer = tiktoken.encoding_for_model("gpt-5").encode
+    tracker = InferenceTracker(client, tokenizer=tokenizer)
 
     # Track a request
     response = await tracker.create_chat_completion(
