@@ -16,9 +16,9 @@ async def main():
     )
     console.print(f"[green]Response:[/green] {response}")
 
-    stats = tracker.compute_metrics()
+    metrics = tracker.compute_metrics()
     console.print("\n[bold blue]Metrics:[/bold blue]")
-    console.print(stats)
+    console.print(metrics)
 
     saved_file = save_metrics_to_json(tracker, "ollama_single_example_metrics.json")
     console.print(f"[yellow]Saved to:[/yellow] {saved_file}")
